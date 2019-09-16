@@ -4,7 +4,7 @@ languages:
 - csharp
 products:
 - dotnet
-description: Samples showcasing how to used Managed Identity service with Service Fabric
+description: "Samples showcasing how to used Managed Identity service with Service Fabric."
 urlFragment: service-fabric-managed-identity
 
 author: athinanthny
