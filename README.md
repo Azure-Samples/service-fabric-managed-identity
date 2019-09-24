@@ -64,7 +64,7 @@ TODO: Provide an ARM template and deploy script to do this automatically
     - Under `Select Principal`, search and choose the managed identity you creared in Step 2
     - It should look like the below:
 
-[key vault policy](/img/accesspolicy.png)
+![key vault policy](img/accesspolicy.png)
 
 5. Click through to create the Key Vault
 
@@ -73,7 +73,8 @@ TODO: Provide an ARM template and deploy script to do this automatically
 1. Access your Key Vault in the Azure Portal and choose `Certificates` from the sidebar
 2. Click `+ Generate/Import`
 3. Enter as below: 
-[certificate](/img/certificate.png)
+
+![certificate](img/certificate.png)
 
 ### Step 3: Deploy a managed-identity-enabled cluster using an ARM template
 
