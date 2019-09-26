@@ -12,7 +12,7 @@ ms.author: atsenthi, anmenard
 service: service-fabric
 ---
 
-# Getting started with Managed Identity on Service Fabric
+# Getting started with Managed Identity for Service Fabric Applications
 
 <!-- 
 Guidelines on README format: https://review.docs.microsoft.com/help/onboard/admin/samples/concepts/readme-template?branch=master
@@ -22,89 +22,73 @@ Guidance on onboarding samples to docs.microsoft.com/samples: https://review.doc
 Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
 -->
 
-This walkthrough steps through the process of deploying a service fabric cluster to Azure with managed identity enabled, and then deploying an application that uses managed identity to that cluster.
+This document walks through the process of deploying a service fabric cluster to Azure with managed identity enabled, and then deploying an application that has a managed identity to that cluster. The provided sample application uses that identity to access secrets in an Azure Key Vault.
+
+[Read more about managed identity on Service Fabric](https://docs.microsoft.com/en-us/azure/service-fabric/concepts-managed-identity)
 
 ## Prerequisites
 
-- [You will need Powershell and the Az Powershell library to run this sample.](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps)
-- You should have an Azure subscription and resource group you can write to. There is no way to test this sample locally.
+```text
+Note: All Azure resources used in the sample should be in the same region. This includes managed identity, Key Vault, Service Fabric cluster, and storage account.
+```
 
-## Overview
+- This sample requires access to an Azure subscription, as well as required privileges and roles to create and manage resources, as specified below.
+- [To run the ARM deployments in the sample, Powershell and the Az Powershell library are needed.](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps)
+- To deploy the user-assigned identity sample application, there needs to be a user-assigned managed identity created in Azure that can be assigned to it.
+  - [How to create a user-assigned managed identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-to-manage-ua-identity-portal)
+- To deploy the cluster, there should be a Key Vault in Azure and a corresponding cluster certificate the resource provider can access. Access policy `Azure Virtual Machines for Deployment` needs to be checked for the ARM deployment to access the Key Vault.
+  - [More information about certificates in Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/certificate-scenarios)
+  - [Example self-signed cluster certificate](img/certificate.png)
+- For a managed identity-enabled application to access Key Vault or any other Azure resource, the resource's access policies should be configured to allow access for the managed identity.
+  - [More information about access policies in key vault](<https://docs.microsoft.com/en-us/azure/key-vault/key-vault-secure-your-key-vault>)
+- To deploy a managed identity-enabled application via ARM, the application package should be in a storage account. `Public access level` of the container needs to be set to `Blob` for ARM to access the storage account during deployment.
+  - [The first half of this document walks through how to upload an application package to a storage account](<https://docs.microsoft.com/en-us/azure/batch/batch-application-packages>)
 
-### Create a User-Assigned Managed Identity and Key Vault
+## Sample Application Overview
 
-1. [Create a user assigned managed identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-to-manage-ua-identity-portal)
-    - Make sure you create it in the region you would like your cluster to be in
-2. Create a Key Vault and necessary cluster server and client certificates ([Below](###-step-2-create-a-key-vault-and-necessary-cluster-server-and-client-certificates))
+Both samples use VaultProbe
 
-### Deploy a cluster
-
-3. Deploy a managed-identity-enabled cluster using an ARM template ([Below](###-step-3-deploy-a-managed-identity-enabled-cluster-using-an-arm-template
-))
-
-### Create an application
-
-4. Create a storage account to host your application package and upload it ([Below](###-step-4-create-a-storage-account-to-host-your-application-package-and-upload-it))
-5. Deploy an application
-    a. Deploy an application with user-assigned managed identity
-    b. Deploy code in a container with system-assigned managed identity
+### Console Application
+<!-- TODO -->
+### Web Application
+<!-- TODO -->
 
 ## Walkthrough
 
-### Step 2: Create a Key Vault and necessary cluster server and client certificates
-<!---
-TODO: Provide an ARM template and deploy script to do this automatically
---->
-#### Create Key Vault
-1. Under your resource group, click `+ Add`, choose `Key Vault`, and click `Create`
-2. Under `Basics`, fill out parameters, putting your keyvault in the same region that you would like your cluster to be in
-3. Under `Access Policy`, check `Azure Virtual Machines for Deployment`, this is what allows ARM to access to keyvault to get the cluster certificate
-4. Under `Access Policy`, click `+ Add Access Policy`
-    - Under `Secret Permissions`, check `Get` and `List`
-    - Under `Select Principal`, search and choose the managed identity you creared in Step 2
-    - It should look like the below:
+### Deploy a managed-identity-enabled cluster
 
-![key vault policy](img/accesspolicy.png)
+Deploying to Azure using the Azure Resource Manager is the recommended way of managing Azure resources. Provided is a sample cluster ARM template to create a Service Fabric cluster with managed identity enabled. The template uses the cluster certificate provided by your key vault, creates a system-assigned identity, and enables the Managed Identity token service so deployed applications can access their identities.
 
-5. Click through to create the Key Vault
+- [More information about ARM deployments](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview)
+- [How to enable managed identity if you already have your own cluster template](https://docs.microsoft.com/en-us/azure/service-fabric/configure-new-azure-service-fabric-enable-managed-identity)
 
-#### Create Cluster Certificate
-
-1. Access your Key Vault in the Azure Portal and choose `Certificates` from the sidebar
-2. Click `+ Generate/Import`
-3. Enter as below: 
-
-![certificate](img/certificate.png)
-
-### Step 3: Deploy a managed-identity-enabled cluster using an ARM template
+To use the provided template:
 
 1. Open `ResourceManagement/cluster.parameters.json` and complete the fields `clusterName`, `clusterLocation`, `adminPassword`, `sourceVaultValue`, `certificateUrlValue`, `certificateThumbprint`
-    - You can find `sourceVaultValue` by navigating to your key vault in the Azure portal, choosing `Properties` from the sidebar, and copying the content under `Resource ID`
-    - You can find `certificateUrlValue` and `certificatethumbprint` by navigating to your key vault, choosing `Certificates`, clicking into your certificate and then the current version, and copying the content under `Secret Identifier` and `X.509 SHA-1 Thumbprint` respectively.
+    - `sourceVaultValue` can be found by navigating to your Key Vault in the Azure portal, choosing `Properties` from the sidebar, and copying the content under `Resource ID`
+    - `certificateUrlValue` and `certificatethumbprint` can be found by navigating to your Key Vault, choosing `Certificates`, clicking into the cluster certificate and then the current version, and copying the content under `Secret Identifier` and `X.509 SHA-1 Thumbprint` respectively.
 2. Open `ResourceManagement/cluster.deploy.ps1` and complete `$Subscription`, `ResourceGroupName`, and `ResourceGroupLocation`
 3. Start the deployment by running `.\cluster.deploy.ps1` from a Powershell window
 
-### Step 4: Create a storage account to host your application package and upload it
-<!---
-TODO: Provide an ARM template and deploy script to do this automatically
---->
-1. Under your resource group, click `+ Add`, choose `Storage account`, and click `Create`
-2. Fill in required details, leaving the defaults for everything else. Make sure `Location` matches that of your cluster; click create
-3. Once the deployment has completed, navigate to the Storage Account and choose `Blobs` from the sidebar. Choose `+ Container`, name it (this is where your app packages will be stored), and set `Public access level` to `Blob` (this will allow ARM to access during deployment)
-4. Click into your container and choose `Upload`. Then, choose the corresponding sample package from the repo `package/` or from an application you have packaged yourself, and click upload.
+### Deploy an application with System or User Assigned Managed Identity
 
-### Step 5: Deploy an application
+The provided ARM templates enable ARM to fetch the application package from storage and assign an identity to the deployed application.
 
-1. Open `ResourceManagement/app.parameters.json` and complete all the parameters
-    - `aplicationPackageUrl` can be retrieved by navigating into the blob container that you created before, clicking into the application you would like to create, and copying the contents of `URL`.
-2. Open `ResourceManagement/app.deploy.ps1` and complete `ResourceGroupName`
-3. Start the deployment by running `.\app.deploy.ps1` from a Powershell window
+- [How to enable system-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-system-assigned-managed-identity)
+- [How to enable user-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-user-assigned-managed-identity)
+
+To deploy an application with system-assigned identity, use the files with `system` prefix, and to deploy an application with user-assigned identity, use the files with `user` prefix.
+
+1. Open `ResourceManagement/*.app.parameters.json` and complete all the parameters
+    - `aplicationPackageUrl` can be found by navigating into the blob container containing your application in your storage account, clicking into the application you would like to create, and copying the contents of `URL`.
+2. Open `ResourceManagement/*.app.deploy.ps1` and complete `ResourceGroupName`
+3. Start the deployment by running `.\*.app.deploy.ps1` from a Powershell window
 
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+the rights to use your contribution. For details, visit <https://cla.opensource.microsoft.com>.
 
 When you submit a pull request, a CLA bot will automatically determine whether you need to provide
 a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
