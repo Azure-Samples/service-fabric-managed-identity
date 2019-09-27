@@ -41,17 +41,19 @@ Note: All Azure resources used in the sample should be in the same region. This 
   - [Example self-signed cluster certificate](img/certificate.png)
 - For a managed identity-enabled application to access Key Vault or any other Azure resource, the resource's access policies should be configured to allow access for the managed identity.
   - [More information about access policies in key vault](<https://docs.microsoft.com/en-us/azure/key-vault/key-vault-secure-your-key-vault>)
-- To deploy a managed identity-enabled application via ARM, the application package should be in a storage account. `Public access level` of the container needs to be set to `Blob` for ARM to access the storage account during deployment.
+- To deploy a managed identity-enabled application via ARM, the sample application package should be in a storage account. `Public access level` of the container needs to be set to `Blob` for ARM to access the storage account during deployment. The package is available in `pkg/`
   - [The first half of this document walks through how to upload an application package to a storage account](<https://docs.microsoft.com/en-us/azure/batch/batch-application-packages>)
 
 ## Sample Application Overview
 
-Both samples use VaultProbe
+This sample application consists of two services, `MISampleWeb` and `MISampleConsole`. Both use their managed identity to access the provided Azure Key Vault. `MISampleWeb` is an ASP.NET Core web API that uses the provided user-assigned managed identity to access Key Vault, and `MISampleConsole` is a C# console application deployed as a container that uses a system-assigned managed identity to access Key Vault.
 
-### Console Application
-<!-- TODO -->
-### Web Application
-<!-- TODO -->
+- [Learn more about accessing Key Vault using service fabric and a managed identity](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-managed-identity-service-fabric-app-code#accessing-key-vault-from-a-service-fabric-application-using-managed-identity)
+
+Once the sample application is deployed, you can run the Key Vault Probe (`src/VaultProbe`) from `MISampleWeb` by navigating to 
+```
+mycluster.myregion.cloudapp.azure.com:80/api/vault
+```
 
 ## Walkthrough
 
@@ -70,19 +72,19 @@ To use the provided template:
 2. Open `ResourceManagement/cluster.deploy.ps1` and complete `$Subscription`, `ResourceGroupName`, and `ResourceGroupLocation`
 3. Start the deployment by running `.\cluster.deploy.ps1` from a Powershell window
 
-### Deploy an application with System or User Assigned Managed Identity
+### Deploy the sample application
 
 The provided ARM templates enable ARM to fetch the application package from storage and assign an identity to the deployed application.
 
 - [How to enable system-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-system-assigned-managed-identity)
 - [How to enable user-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-user-assigned-managed-identity)
 
-To deploy an application with system-assigned identity, use the files with `system` prefix, and to deploy an application with user-assigned identity, use the files with `user` prefix.
-
-1. Open `ResourceManagement/*.app.parameters.json` and complete all the parameters
+1. Open `ResourceManagement/app.parameters.json` and complete all the parameters
     - `aplicationPackageUrl` can be found by navigating into the blob container containing your application in your storage account, clicking into the application you would like to create, and copying the contents of `URL`.
-2. Open `ResourceManagement/*.app.deploy.ps1` and complete `ResourceGroupName`
-3. Start the deployment by running `.\*.app.deploy.ps1` from a Powershell window
+2. Start the deployment by running from a Powershell window: 
+```
+New-AzResourceGroupDeployment -ResourceGroupName <resourcegroup> -TemplateParameterFile ".\app.parameters.json" -TemplateFile ".\app.template.json" -verbose
+```
 
 ## Contributing
 
