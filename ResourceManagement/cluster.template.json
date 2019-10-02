@@ -242,7 +242,19 @@
         },
         "vmNodeType0Size": {
             "type": "string",
-            "defaultValue": "Standard_D1_v2"
+            "defaultValue": "Standard_D2S_v3"
+        },
+        "kvvmextObservedCertificates": {
+            "type": "array",
+            "metadata": {
+              "description": "Kv vm extension observed certificate non-version uri"
+            }
+        },
+        "kvvmextPollingInterval": {
+            "type": "string",
+            "metadata": {
+              "description": "kv vm extension polling interval"
+            }
         }
     },
     "variables": {
@@ -490,6 +502,23 @@
                     "extensionProfile": {
                         "extensions": [
                             {
+                                "name": "KVVMExtension",
+                                "properties": {
+                                    "publisher": "Microsoft.Azure.KeyVault",
+                                    "type": "KeyVaultForWindows",
+                                    "typeHandlerVersion": "1.0",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "secretsManagementSettings": {
+                                            "pollingIntervalInS": "[parameters('kvvmextPollingInterval')]",
+                                            "linkOnRenewal": false,
+                                            "observedCertificates": "[parameters('kvvmextObservedCertificates')]",
+                                            "requireInitialSync": true
+                                        }
+                                    }
+                                }
+                            },
+                            {
                                 "name": "[concat(parameters('vmNodeType0Name'),'_ServiceFabricNode')]",
                                 "properties": {
                                     "type": "ServiceFabricNode",
@@ -678,6 +707,15 @@
                             }
                         ],
                         "name": "Security"
+                    },
+                    {
+                        "name": "ManagedIdentityTokenService",
+                        "parameters": [
+                            {
+                                "name": "IsEnabled",
+                                "value": "true"
+                            }
+                        ]
                     }
                 ],
                 "managementEndpoint": "[concat('https://',reference(concat(parameters('lbIPName'),'-',parameters('vmNodeType0Name'))).dnsSettings.fqdn,':',parameters('nt0fabricHttpGatewayPort'))]",

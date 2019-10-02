@@ -3,22 +3,27 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "clusterLocation": {
-            "value": null
+            "value": ""
         },
         "adminUserName": {
-            "value": "(do not use easy names like 'admin')"
+            "value": "(don't use common names like 'admin')"
         },
         "adminPassword": {
-            "value": "(include upper, lower, number, special char)"
+            "value": "(include lower, upper, number, special char)"
         },
         "sourceVaultValue": {
-            "value": null
+            "value": "/subscriptions/mygui/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv"
         },
         "certificateUrlValue": {
-            "value": null
+            "value": "https://mykv.vault.azure.net/secrets/mycert/gui"
         },
         "certificateThumbprint": {
-            "value": null
+            "value": ""
+        },
+        "kvvmextObservedCertificates": {
+            "value": [
+                "https://mykv.vault.azure.net/secrets/mycert"
+            ]
         },
         "nicName": {
             "value": "NIC-mi-test"
@@ -47,11 +52,17 @@
         "supportLogStorageAccountName": {
             "value": "sflogsmitest8890"
         },
-        "vmImageSku": {
-            "value": "Datacenter-Core-1803-with-Containers-smalldisk"
+        "vmImagePublisher": {
+            "value": "MicrosoftWindowsServer"
         },
         "vmImageOffer": {
-            "value": "WindowsServerSemiAnnual"
+            "value": "WindowsServer"
+        },
+        "vmImageSku": {
+            "value": "2019-Datacenter-with-Containers-smalldisk"
+        },
+        "vmImageVersion": {
+            "value": "latest"
         },
         "nt0ephemeralStartPort": {
             "value": 49152
@@ -70,6 +81,9 @@
         },
         "nt0fabricHttpGatewayPort": {
             "value": 19080
+        },
+        "kvvmextPollingInterval": {
+            "value": "3600"
         }
     }
 }

@@ -1,0 +1,178 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of your cluster - Between 3 and 23 characters. Letters and numbers only"
+      }
+    },
+    "applicationTypeName": {
+      "type": "string",
+      "metadata": {
+        "description": "The application type name"
+      }
+    },
+    "applicationTypeVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The application type version"
+      }
+    },
+    "applicationPackageUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "The full URL to the application package sfpkg file"
+      }
+    },
+    "applicationName": {
+      "type": "string",
+      "metadata": {
+        "description": "The application name"
+      }
+    },
+    "consoleServiceName": {
+      "type": "string",
+      "defaultValue": "Service1",
+      "metadata": {
+        "description": "The name of the service resource in the format of {applicationName}~{consoleServiceName}."
+      }
+    },
+    "consoleServiceTypeName": {
+      "type": "string",
+      "defaultValue": "Service1Type",
+      "metadata": {
+        "description": "The name of the service type."
+      }
+    },
+    "webServiceName": {
+      "type": "string",
+      "defaultValue": "Service2",
+      "metadata": {
+        "description": "The name of the service resource in the format of {applicationName}~{consoleServiceName}."
+      }
+    },
+    "webServiceTypeName": {
+      "type": "string",
+      "defaultValue": "Service2Type",
+      "metadata": {
+        "description": "The name of the service type."
+      }
+    },
+    "userAssignedIdentityName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the user assigned identity resource."
+      }
+    },
+    "userAssignedIdentityFriendlyName": {
+      "type": "string",
+      "metadata": {
+        "description": "The friendly name of the user assigned identity, used to map it to a service definition."
+      }
+    }
+  },
+  "variables": {
+    "serviceFabricMIApiVersion": "2019-06-01-preview",
+    "serviceFabricAppApiVersion": "2019-03-01",
+    "managedIdentityApiVersion": "2018-11-30",
+    "userAssignedIdentityResourceId" : "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('userAssignedIdentityName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('managedIdentityApiVersion')]",
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "name": "[parameters('userAssignedIdentityName')]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "apiVersion": "[variables('serviceFabricAppApiVersion')]",
+      "type": "Microsoft.ServiceFabric/clusters/applicationTypes",
+      "name": "[concat(parameters('clusterName'), '/', parameters('applicationTypeName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {}
+    },
+    {
+      "apiVersion": "[variables('serviceFabricAppApiVersion')]",
+      "type": "Microsoft.ServiceFabric/clusters/applicationTypes/versions",
+      "name": "[concat(parameters('clusterName'), '/', parameters('applicationTypeName'), '/', parameters('applicationTypeVersion'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applicationTypes/', parameters('applicationTypeName'))]"
+      ],
+      "properties": {
+        "appPackageUrl": "[parameters('applicationPackageUrl')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('serviceFabricMIApiVersion')]",
+      "type": "Microsoft.ServiceFabric/clusters/applications",
+      "name": "[concat(parameters('clusterName'), '/', parameters('applicationName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applicationTypes/', parameters('applicationTypeName'), '/versions/', parameters('applicationTypeVersion'))]",
+        "[variables('userAssignedIdentityResourceId')]"
+      ],
+      "identity": {
+        "type" : "systemAssigned,userAssigned",
+        "userAssignedIdentities": {
+            "[variables('userAssignedIdentityResourceId')]": {}
+        }
+      },
+      "properties": {
+        "typeName": "[parameters('applicationTypeName')]",
+        "typeVersion": "[parameters('applicationTypeVersion')]",
+        "parameters": {
+        },
+        "managedIdentities": [
+          {
+            "name" : "[parameters('userAssignedIdentityFriendlyName')]",
+            "principalId" : "[reference(variables('userAssignedIdentityResourceId'), variables('managedIdentityApiVersion')).principalId]"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('serviceFabricMIApiVersion')]",
+      "type": "Microsoft.ServiceFabric/clusters/applications/services",
+      "name": "[concat(parameters('clusterName'), '/', parameters('applicationName'), '/', parameters('consoleServiceName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applications/', parameters('applicationName'))]"
+      ],
+      "properties": {
+        "serviceKind": "Stateless",
+        "serviceTypeName": "[parameters('consoleServiceTypeName')]",
+        "instanceCount": "-1",
+        "partitionDescription": {
+          "partitionScheme": "Singleton"
+        },
+        "correlationScheme": [],
+        "serviceLoadMetrics": [],
+        "servicePlacementPolicies": []
+      }
+    },
+    {
+      "apiVersion": "[variables('serviceFabricMIApiVersion')]",
+      "type": "Microsoft.ServiceFabric/clusters/applications/services",
+      "name": "[concat(parameters('clusterName'), '/', parameters('applicationName'), '/', parameters('webServiceName'))]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applications/', parameters('applicationName'))]"
+      ],
+      "properties": {
+        "serviceKind": "Stateless",
+        "serviceTypeName": "[parameters('webServiceTypeName')]",
+        "instanceCount": "-1",
+        "partitionDescription": {
+          "partitionScheme": "Singleton"
+        },
+        "correlationScheme": [],
+        "serviceLoadMetrics": [],
+        "servicePlacementPolicies": []
+      }
+    }
+  ]
+}
