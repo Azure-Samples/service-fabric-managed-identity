@@ -1,0 +1,92 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterLocation": {
+            "value": ""
+        },
+        "adminUserName": {
+            "value": "(don't use common names like 'admin')"
+        },
+        "adminPassword": {
+            "value": "(include lower, upper, number, special char)"
+        },
+        "sourceVaultValue": {
+            "value": "/subscriptions/myguid/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv"
+        },
+        "certificateUrlValue": {
+            "value": "https://mykv.vault.azure.net/secrets/mycert/guid"
+        },
+        "certificateThumbprint": {
+            "value": ""
+        },
+        "kvvmextObservedCertificates": {
+            "value": [
+                "https://mykv.vault.azure.net/secrets/mycert"
+            ]
+        },
+        "nicName": {
+            "value": "NIC-mi-test"
+        },
+        "publicIPAddressName": {
+            "value": "mi-test-PubIP"
+        },
+        "dnsName": {
+            "value": "mi-test"
+        },
+        "virtualNetworkName": {
+            "value": "VNet-mi-test"
+        },
+        "lbName": {
+            "value": "LB-mi-test"
+        },
+        "lbIPName": {
+            "value": "LBIP-mi-test"
+        },
+        "clusterName": {
+            "value": "mi-test"
+        },
+        "applicationDiagnosticsStorageAccountName": {
+            "value": "sfdgmitest8275"
+        },
+        "supportLogStorageAccountName": {
+            "value": "sflogsmitest8890"
+        },
+        "vmImagePublisher": {
+            "value": "MicrosoftWindowsServer"
+        },
+        "vmImageOffer": {
+            "value": "WindowsServer"
+        },
+        "vmImageSku": {
+            "value": "2019-Datacenter-with-Containers-smalldisk"
+        },
+        "vmImageVersion": {
+            "value": "latest"
+        },
+        "nt0InstanceCount": {
+            "value": 3
+        },
+        "nt0ephemeralStartPort": {
+            "value": 49152
+        },
+        "nt0ephemeralEndPort": {
+            "value": 65534
+        },
+        "nt0applicationStartPort": {
+            "value": 20000
+        },
+        "nt0applicationEndPort": {
+            "value": 30000
+        },
+        "nt0fabricTcpGatewayPort": {
+            "value": 19000
+        },
+        "nt0fabricHttpGatewayPort": {
+            "value": 19080
+        },
+        "kvvmextPollingInterval": {
+            "value": "3600"
+        }
+    }
+}
