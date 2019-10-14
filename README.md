@@ -74,8 +74,9 @@ To use the provided template:
 1. Open `ResourceManagement/cluster.parameters.json` and complete the fields `clusterLocation`, `adminUserName`, `adminPassword`, `sourceVaultValue`, `certificateUrlValue`, `certificateThumbprint`
     - `sourceVaultValue` can be found by navigating to your Key Vault in the Azure portal, choosing `Properties` from the sidebar, and copying the content under `Resource ID`
     - `certificateUrlValue` and `certificatethumbprint` can be found by navigating to your Key Vault, choosing `Certificates`, clicking into the cluster certificate and then the current version, and copying the content under `Secret Identifier` and `X.509 SHA-1 Thumbprint` respectively.
-2. Open `ResourceManagement/cluster.deploy.ps1` and complete `Subscription`, `ResourceGroupName`, and `ResourceGroupLocation`
-3. Start the deployment by running `.\cluster.deploy.ps1` from a Powershell window
+2. In `ResourceManagement/cluster.parameters.json`, manually, or using `ctrl-f` and replace-all, change all instances of `mi-test` to a unique name, like `myusername-mi-test`. This will help ensure the deployment resource names do not conflict with the names of other public resources.
+3. Open `ResourceManagement/cluster.deploy.ps1` and complete `Subscription`, `ResourceGroupName`, and `ResourceGroupLocation`
+4. Start the deployment by running `.\cluster.deploy.ps1` from a Powershell window
 
 ### Deploy the sample application
 

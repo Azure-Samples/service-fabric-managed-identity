@@ -19,8 +19,9 @@
       </ContainerHost>
     </EntryPoint>
     <EnvironmentVariables>
-      <EnvironmentVariable Name="sfmi_observed_vault" Value="https://mykv.vault.azure.net" />
-      <EnvironmentVariable Name="sfmi_observed_secret" Value="mysecret" />
+      <!--                                      looks like:  https://mykv.vault.azure.net -->
+      <EnvironmentVariable Name="sfmi_observed_vault" Value="" />
+      <EnvironmentVariable Name="sfmi_observed_secret" Value="" />
       <EnvironmentVariable Name="sfmi_verbose_logging" Value="false" />
       <EnvironmentVariable Name="sfmi_poll_interval" Value="32" />
     </EnvironmentVariables>

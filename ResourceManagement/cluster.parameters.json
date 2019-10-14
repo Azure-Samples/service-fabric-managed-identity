@@ -12,10 +12,10 @@
             "value": "(include lower, upper, number, special char)"
         },
         "sourceVaultValue": {
-            "value": "/subscriptions/mygui/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv"
+            "value": "/subscriptions/myguid/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv"
         },
         "certificateUrlValue": {
-            "value": "https://mykv.vault.azure.net/secrets/mycert/gui"
+            "value": "https://mykv.vault.azure.net/secrets/mycert/guid"
         },
         "certificateThumbprint": {
             "value": ""
@@ -63,6 +63,9 @@
         },
         "vmImageVersion": {
             "value": "latest"
+        },
+        "nt0InstanceCount": {
+            "value": 3
         },
         "nt0ephemeralStartPort": {
             "value": 49152
