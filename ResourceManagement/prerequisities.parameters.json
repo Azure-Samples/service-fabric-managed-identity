@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "keyvault_name": {
+            "value": ""
+        },
+        "container_registry_name": {
+            "value": ""
+        },
+        "storage_account_packages_name": {
+            "value": ""
+        },
+        "user_assigned_identity_name": {
+            "value": ""
+        },
+        "resource_group_location": {
+            "value": ""
+        },
+        "resource_group_name": {
+            "value": ""
+        }
+    }
+}
