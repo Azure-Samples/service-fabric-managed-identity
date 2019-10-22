@@ -56,9 +56,15 @@ You can create the below tabled resources yourself, or use the provided ARM temp
 
 ### Create a cluster certificate
 
-To deploy the cluster, a cluster certificate needs to be in Key Vault at deployment time. This can be done two ways
-- Via the portal, create the certificate, it should look similar to [this](img/certificate.png).
-- [Use a powershell script to create and upload a certificate](https://github.com/Azure/azure-quickstart-templates/blob/master/service-fabric-secure-cluster-5-node-1-nodetype/New-ServiceFabricClusterCertificate.ps1) (note this script uses the older AzureRM library).
+To deploy the cluster, a cluster certificate needs to be in Key Vault at deployment time. You can create a self-signed certificate in the portal or by running:
+```powershell
+$VaultName = ""
+$CertName = ""
+$SubjectName = "CN="
+
+$policy = New-AzKeyVaultCertificatePolicy -SubjectName $SubjectName -IssuerName Self -ValidityInMonths 12
+Add-AzKeyVaultCertificate -VaultName $VaultName -Name $CertName -CertificatePolicy $policy
+```
 
 ## Sample Application Overview
 
