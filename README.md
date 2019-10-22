@@ -26,7 +26,7 @@ This document walks through the process of deploying a service fabric cluster to
 
 ## Environment Requirements
 
-> Note: All Azure resources used in the sample should be in the same region & resource group. This includes managed identity, Key Vault, Service Fabric cluster, and storage account.
+> **Note:** All Azure resources used in the sample should be in the same region & resource group. This includes managed identity, Key Vault, Service Fabric cluster, and storage account.
 
 - This sample requires access to an Azure subscription and required privileges to create resources
 - [Powershell and the Az library are needed to run the deployments in the sample.](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps)
@@ -67,7 +67,7 @@ To deploy the cluster, a cluster certificate needs to be in Key Vault at deploym
 | MISampleWeb | ASP.NET Core App |User-Assigned | Go to the public endpoint `http://mycluster.myregion.cloudapp.azure.com:80/vault` |
 | MISampleConsole | Containerized C# Console App |System-Assigned | Remote into node running the service at `my.node.ip:3389`, find the running container with command `docker ps`, and look at the logs with `docker logs` |
 
-> [Learn more about accessing Key Vault using service fabric and a managed identity](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-managed-identity-service-fabric-app-code#accessing-key-vault-from-a-service-fabric-application-using-managed-identity)
+[Learn more about accessing Key Vault using service fabric and a managed identity](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-managed-identity-service-fabric-app-code#accessing-key-vault-from-a-service-fabric-application-using-managed-identity)
 
 ## Walkthrough
 
