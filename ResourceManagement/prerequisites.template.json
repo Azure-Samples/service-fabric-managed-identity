@@ -2,23 +2,23 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "my_AD_identity_object_ID": {
+            "type": "string"
+        },
         "keyvault_name": {
-            "type": "String"
+            "type": "string"
         },
         "container_registry_name": {
-            "type": "String"
+            "type": "string"
         },
         "storage_account_packages_name": {
-            "type": "String"
+            "type": "string"
         },
         "user_assigned_identity_name": {
-            "type": "String"
+            "type": "string"
         },
         "resource_group_location": {
-            "type": "String"
-        },
-        "resource_group_name": {
-            "type": "String"
+            "type": "string"
         }
     },
     "variables": {
@@ -76,6 +76,21 @@
                             "certificates": [
                                 "Get",
                                 "List"
+                            ]
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(variables('user_assigned_identity_id'), variables('managed_identity_api_version')).tenantId]",
+                        "objectId": "[parameters('my_AD_identity_object_ID')]",
+                        "permissions": {
+                            "keys": [
+                                "All"
+                            ],
+                            "secrets": [
+                                "All"
+                            ],
+                            "certificates": [
+                                "All"
                             ]
                         }
                     }
