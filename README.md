@@ -16,9 +16,7 @@ service: service-fabric
 
 <!-- 
 Guidelines on README format: https://review.docs.microsoft.com/help/onboard/admin/samples/concepts/readme-template?branch=master
-
 Guidance on onboarding samples to docs.microsoft.com/samples: https://review.docs.microsoft.com/help/onboard/admin/samples/process/onboarding?branch=master
-
 Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
 -->
 
@@ -26,39 +24,56 @@ This document walks through the process of deploying a service fabric cluster to
 
 [Read more about managed identity on Service Fabric](https://docs.microsoft.com/en-us/azure/service-fabric/concepts-managed-identity)
 
-## Prerequisites
+## Environment Requirements
 
-```text
-Note: All Azure resources used in the sample should be in the same region. This includes managed identity, Key Vault, Service Fabric cluster, and storage account.
-```
+> **Note:** All Azure resources used in the sample should be in the same region & resource group. This includes managed identity, Key Vault, Service Fabric cluster, and storage account.
 
-- This sample requires access to an Azure subscription, as well as required privileges and roles to create and manage resources, as specified below.
+- This sample requires access to an Azure subscription and required privileges to create resources
 - [Powershell and the Az library are needed to run the deployments in the sample.](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps)
 - Docker is needed to build and push the sample containerized service. When testing locally, Docker should be using Windows containers, not linux containers.
-- To deploy the user-assigned identity sample application, there should be a user-assigned managed identity created in Azure that can be assigned to it.
-  - [How to create a user-assigned managed identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-to-manage-ua-identity-portal)
-- To deploy the cluster, there should be a Key Vault in Azure and a corresponding cluster certificate the resource provider can access. Access policy `Azure Virtual Machines for Deployment` needs to be checked for the ARM deployment to access the Key Vault.
-  - [More information about certificates in Azure Key Vault](https://docs.microsoft.com/en-us/azure/key-vault/certificate-scenarios)
-  - [Example self-signed cluster certificate](img/certificate.png)
-- For a managed identity-enabled application to access Key Vault or any other Azure resource, the resource's access policies should be configured to allow access for the managed identity.
-  - [More information about access policies in key vault](<https://docs.microsoft.com/en-us/azure/key-vault/key-vault-secure-your-key-vault>)
-- To deploy a managed identity-enabled application via ARM, the sample application package should be in a storage account. `Public access level` of the container needs to be set to `Blob` for ARM to access the storage account during deployment.
-  - [The first half of this document walks through how to upload an application package to a storage account](<https://docs.microsoft.com/en-us/azure/batch/batch-application-packages>)
-- For Service Fabric to pull the containerized `MISampleConsole` service, it needs to be hosted in a container registry. Specific build instructions are in the walkthrough.
-  - [Creating a containerized application in Service Fabric](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-get-started-containers)
+
+## Setting up Resource Prerequisites
+
+From an elevated powershell window, run
+```powershell
+Connect-AzAccount
+Select-AzSubscription -Subscription $subscription
+# If you do not already have a resource group to create resources from this walkthrough:
+New-AzResourceGroup -Name $rgname -Location $location
+```
+
+You can create the below tabled resources yourself, or use the provided ARM template to create these resources for you by opening `ResourceManagement\prerequisites.parameters.json` and filling out all the fields, then running
+```powershell
+ New-AzResourceGroupDeployment -TemplateParameterFile ".\prerequisites.parameters.json" -TemplateFile ".\prerequisites.template.json" -ResourceGroupName $rgname -verbose
+```
+
+| Resource | Description |
+| :--- | :--- |
+| User-Assigned Managed Identity | This identity will be assigned to the service fabric application |
+| Key Vault with identity given access | This keyvault will hold the cluster certificate and will be accessed by the sample application. Access policy `Azure Virtual Machines for Deployment` needs to be checked. [The Key Vault's access policies should be configured to allow access for the managed identity](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-secure-your-key-vault) |
+| Storage Account with Blob container| To deploy the application via ARM, [the application package should be in a storage account](<https://docs.microsoft.com/en-us/azure/batch/batch-application-packages>). `Public access level` of the container needs to be set to `Blob` for ARM to access the storage account during deployment. |
+| Container registry to host console service| For Service Fabric to pull the containerized `MISampleConsole` service, it needs to be hosted in a container registry. Specific build instructions are in the walkthrough. [More information on creating a containerized application in Service Fabric](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-get-started-containers). |
+
+### Create a cluster certificate
+
+To deploy the cluster, a cluster certificate needs to be in Key Vault at deployment time. You can create a self-signed certificate in the portal or by running:
+```powershell
+$VaultName = ""
+$CertName = ""
+$SubjectName = "CN="
+
+$policy = New-AzKeyVaultCertificatePolicy -SubjectName $SubjectName -IssuerName Self -ValidityInMonths 12
+Add-AzKeyVaultCertificate -VaultName $VaultName -Name $CertName -CertificatePolicy $policy
+```
 
 ## Sample Application Overview
 
-This sample application consists of two services, `MISampleWeb` and `MISampleConsole`. Both use their managed identity to access the provided Azure Key Vault. `MISampleWeb` is an ASP.NET Core web API that uses the provided user-assigned managed identity to access Key Vault, and `MISampleConsole` is a C# console application deployed as a container that uses a system-assigned managed identity to access Key Vault.
+| MISampleApp Service | Service type |Managed identity it uses | How to validate it is working |
+| :--- | :--- | :--- | :--- |
+| MISampleWeb | ASP.NET Core App |User-Assigned | Go to the public endpoint `http://mycluster.myregion.cloudapp.azure.com:80/vault` |
+| MISampleConsole | Containerized C# Console App |System-Assigned | Remote into node running the service at `my.node.ip:3389`, find the running container with command `docker ps`, and look at the logs with `docker logs` |
 
-- [Learn more about accessing Key Vault using service fabric and a managed identity](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-managed-identity-service-fabric-app-code#accessing-key-vault-from-a-service-fabric-application-using-managed-identity)
-
-Once the sample application is deployed, you can run the Key Vault Probe (`src/VaultProbe`) from `MISampleWeb` by navigating to 
-```
-mycluster.myregion.cloudapp.azure.com:80/vault
-```
-
-You can run the probe from `MISampleConsole` by RDPing into a running node (my.node.ip:3389), finding the running container with `docker ps`, and then connecting to the logs with `docker logs`.
+[Learn more about accessing Key Vault using service fabric and a managed identity](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-managed-identity-service-fabric-app-code#accessing-key-vault-from-a-service-fabric-application-using-managed-identity)
 
 ## Walkthrough
 

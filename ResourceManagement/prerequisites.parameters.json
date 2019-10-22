@@ -1,0 +1,25 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "my_AD_identity_object_ID": {
+            "value": "",
+            "description": "Your AD object ID can be found by calling `(Get-AzADUser -Mail me@example.com).Id` from a logged-in powershell window"
+        },
+        "keyvault_name": {
+            "value": ""
+        },
+        "container_registry_name": {
+            "value": ""
+        },
+        "storage_account_packages_name": {
+            "value": ""
+        },
+        "user_assigned_identity_name": {
+            "value": ""
+        },
+        "resource_group_location": {
+            "value": ""
+        }
+    }
+}

@@ -1,0 +1,170 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "my_AD_identity_object_ID": {
+            "type": "string"
+        },
+        "keyvault_name": {
+            "type": "string"
+        },
+        "container_registry_name": {
+            "type": "string"
+        },
+        "storage_account_packages_name": {
+            "type": "string"
+        },
+        "user_assigned_identity_name": {
+            "type": "string"
+        },
+        "resource_group_location": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "keyvault_api_version": "2016-10-01",
+        "resource_group_api_version": "2018-05-01",
+        "registry_api_version": "2017-10-01",
+        "managed_identity_api_version": "2018-11-30",
+        "storage_account_api_version": "2016-01-01",
+        "user_assigned_identity_id": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('user_assigned_identity_name'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ContainerRegistry/registries",
+            "apiVersion": "[variables('registry_api_version')]",
+            "name": "[parameters('container_registry_name')]",
+            "location": "[parameters('resource_group_location')]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Standard"
+            },
+            "properties": {
+                "adminUserEnabled": true
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "[variables('keyvault_api_version')]",
+            "name": "[parameters('keyvault_name')]",
+            "location": "[parameters('resource_group_location')]",
+            "dependsOn": [
+                "[variables('user_assigned_identity_id')]"
+            ],
+            "properties": {
+                "tenantId": "[reference(variables('user_assigned_identity_id'), variables('managed_identity_api_version')).tenantId]",
+                "sku": {
+                    "family": "A",
+                    "name": "standard"
+                },
+                "accessPolicies": [
+                    {
+                        "tenantId": "[reference(variables('user_assigned_identity_id'), variables('managed_identity_api_version')).tenantId]",
+                        "objectId": "[reference(variables('user_assigned_identity_id'), variables('managed_identity_api_version')).principalId]",
+                        "dependsOn": [
+                            "[variables('user_assigned_identity_id')]"
+                        ],
+                        "permissions": {
+                            "keys": [
+                                "Get",
+                                "List"
+                            ],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": [
+                                "Get",
+                                "List"
+                            ]
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(variables('user_assigned_identity_id'), variables('managed_identity_api_version')).tenantId]",
+                        "objectId": "[parameters('my_AD_identity_object_ID')]",
+                        "permissions": {
+                            "keys": [
+                                "All"
+                            ],
+                            "secrets": [
+                                "All"
+                            ],
+                            "certificates": [
+                                "All"
+                            ]
+                        }
+                    }
+                ],
+                "enabledForDeployment": true,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": true
+            }
+        },
+        {
+            "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+            "apiVersion": "[variables('managed_identity_api_version')]",
+            "name": "[parameters('user_assigned_identity_name')]",
+            "location": "[parameters('resource_group_location')]"
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-04-01",
+            "name": "[parameters('storage_account_packages_name')]",
+            "location": "[parameters('resource_group_location')]",
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "enabled": true
+                        },
+                        "blob": {
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Cool"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2019-04-01",
+            "name": "[concat(parameters('storage_account_packages_name'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storage_account_packages_name'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2019-04-01",
+            "name": "[concat(parameters('storage_account_packages_name'), '/default/sfmisampleapp')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storage_account_packages_name'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storage_account_packages_name'))]"
+            ],
+            "properties": {
+                "publicAccess": "Blob"
+            }
+        }
+    ]
+}
