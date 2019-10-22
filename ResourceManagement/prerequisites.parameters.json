@@ -20,9 +20,6 @@
         },
         "resource_group_location": {
             "value": ""
-        },
-        "resource_group_name": {
-            "value": ""
         }
     }
 }

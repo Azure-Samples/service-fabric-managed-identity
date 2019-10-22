@@ -24,7 +24,7 @@ This document walks through the process of deploying a service fabric cluster to
 
 [Read more about managed identity on Service Fabric](https://docs.microsoft.com/en-us/azure/service-fabric/concepts-managed-identity)
 
-## Prerequisites
+## Environment Requirements
 
 > Note: All Azure resources used in the sample should be in the same region & resource group. This includes managed identity, Key Vault, Service Fabric cluster, and storage account.
 
@@ -32,19 +32,17 @@ This document walks through the process of deploying a service fabric cluster to
 - [Powershell and the Az library are needed to run the deployments in the sample.](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps)
 - Docker is needed to build and push the sample containerized service. When testing locally, Docker should be using Windows containers, not linux containers.
 
-## Setup
+## Setting up Resource Prerequisites
 
 From an elevated powershell window, run
 ```powershell
 Connect-AzAccount
 Select-AzSubscription -Subscription $subscription
-# If you do not already have a resource group to create resources from this walkthrough in:
+# If you do not already have a resource group to create resources from this walkthrough:
 New-AzResourceGroup -Name $rgname -Location $location
 ```
 
-### Needed Azure Resources
-
-You can create the below resources yourself, or use the provided ARM template to create these resources for you by opening `ResourceManagement\prerequisites.parameters.json` and filling out all the fields, then running
+You can create the below tabled resources yourself, or use the provided ARM template to create these resources for you by opening `ResourceManagement\prerequisites.parameters.json` and filling out all the fields, then running
 ```powershell
  New-AzResourceGroupDeployment -TemplateParameterFile ".\prerequisites.parameters.json" -TemplateFile ".\prerequisites.template.json" -ResourceGroupName $rgname -verbose
 ```
@@ -55,8 +53,6 @@ You can create the below resources yourself, or use the provided ARM template to
 | Key Vault with identity given access | This keyvault will hold the cluster certificate and will be accessed by the sample application. Access policy `Azure Virtual Machines for Deployment` needs to be checked. [The Key Vault's access policies should be configured to allow access for the managed identity](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-secure-your-key-vault) |
 | Storage Account with Blob container| To deploy the application via ARM, [the application package should be in a storage account](<https://docs.microsoft.com/en-us/azure/batch/batch-application-packages>). `Public access level` of the container needs to be set to `Blob` for ARM to access the storage account during deployment. |
 | Container registry to host console service| For Service Fabric to pull the containerized `MISampleConsole` service, it needs to be hosted in a container registry. Specific build instructions are in the walkthrough. [More information on creating a containerized application in Service Fabric](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-get-started-containers). |
-
-> All of the above will be created by the provided template.
 
 ### Create a cluster certificate
 
