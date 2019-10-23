@@ -26,7 +26,7 @@ This document walks through the process of deploying a service fabric cluster to
 - [Powershell and the Az library are needed to run the deployments in the sample.](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps)
 - Docker is needed to build and push the sample containerized service. When testing locally, Docker should be using Windows containers, not linux containers.
 
-## Setting up Resource Prerequisites
+## Setting up Prerequisite Resources
 
 From an elevated powershell window, run
 ```powershell
