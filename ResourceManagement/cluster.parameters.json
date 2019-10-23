@@ -6,24 +6,23 @@
             "value": ""
         },
         "adminUserName": {
-            "value": "(don't use common names like 'admin')"
+            "value": "",
+            "description": "don't use common names like 'admin'"
         },
         "adminPassword": {
-            "value": "(include lower, upper, number, special char)"
+            "value": "",
+            "description": "include lower, upper, number, special char"
         },
         "sourceVaultValue": {
-            "value": "/subscriptions/myguid/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv"
+            "value": "",
+            "description": "looks like /subscriptions/myguid/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv, can be found as ResourceID under properties in the key vault"
         },
         "certificateUrlValue": {
-            "value": "https://mykv.vault.azure.net/secrets/mycert/guid"
+            "value": "",
+            "description": "looks like https://mykv.vault.azure.net/secrets/mycert/guid, can be found as secret identifier in the certificate's page"
         },
         "certificateThumbprint": {
             "value": ""
-        },
-        "kvvmextObservedCertificates": {
-            "value": [
-                "https://mykv.vault.azure.net/secrets/mycert"
-            ]
         },
         "nicName": {
             "value": "NIC-mi-test"
@@ -65,7 +64,7 @@
             "value": "latest"
         },
         "nt0InstanceCount": {
-            "value": 3
+            "value": 5
         },
         "nt0ephemeralStartPort": {
             "value": 49152
@@ -84,9 +83,6 @@
         },
         "nt0fabricHttpGatewayPort": {
             "value": 19080
-        },
-        "kvvmextPollingInterval": {
-            "value": "3600"
         }
     }
 }

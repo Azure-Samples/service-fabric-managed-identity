@@ -4,7 +4,7 @@ languages:
 - csharp
 products:
 - dotnet
-description: "Samples showcasing how to used Managed Identity service with Service Fabric."
+description: "End-to-end walkthrough of deploying a service fabric application with managed identities."
 urlFragment: service-fabric-managed-identity
 
 author: athinanthny, amenarde
@@ -13,12 +13,6 @@ service: service-fabric
 ---
 
 # Getting started with Managed Identity for Service Fabric Applications
-
-<!-- 
-Guidelines on README format: https://review.docs.microsoft.com/help/onboard/admin/samples/concepts/readme-template?branch=master
-Guidance on onboarding samples to docs.microsoft.com/samples: https://review.docs.microsoft.com/help/onboard/admin/samples/process/onboarding?branch=master
-Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
--->
 
 This document walks through the process of deploying a service fabric cluster to Azure with managed identity enabled, and then deploying an application that has a managed identity to that cluster. The provided sample application uses that identity to access secrets in an Azure Key Vault.
 
@@ -37,14 +31,14 @@ This document walks through the process of deploying a service fabric cluster to
 From an elevated powershell window, run
 ```powershell
 Connect-AzAccount
-Select-AzSubscription -Subscription $subscription
+Select-AzSubscription -Subscription $Subscription
 # If you do not already have a resource group to create resources from this walkthrough:
-New-AzResourceGroup -Name $rgname -Location $location
+New-AzResourceGroup -Name $ResourceGroupName -Location $Location
 ```
 
-You can create the below tabled resources yourself, or use the provided ARM template to create these resources for you by opening `ResourceManagement\prerequisites.parameters.json` and filling out all the fields, then running
+You can create the below tabled resources yourself, or use the provided ARM template to create these resources for you by opening `ResourceManagement\prerequisites.parameters.json` and filling out all the fields, then starting the deployment by running from a Powershell window: 
 ```powershell
- New-AzResourceGroupDeployment -TemplateParameterFile ".\prerequisites.parameters.json" -TemplateFile ".\prerequisites.template.json" -ResourceGroupName $rgname -verbose
+ New-AzResourceGroupDeployment -TemplateParameterFile ".\prerequisites.parameters.json" -TemplateFile ".\prerequisites.template.json" -ResourceGroupName $ResourceGroupName
 ```
 
 | Resource | Description |
@@ -58,12 +52,8 @@ You can create the below tabled resources yourself, or use the provided ARM temp
 
 To deploy the cluster, a cluster certificate needs to be in Key Vault at deployment time. You can create a self-signed certificate in the portal or by running:
 ```powershell
-$VaultName = ""
-$CertName = ""
-$SubjectName = "CN="
-
-$policy = New-AzKeyVaultCertificatePolicy -SubjectName $SubjectName -IssuerName Self -ValidityInMonths 12
-Add-AzKeyVaultCertificate -VaultName $VaultName -Name $CertName -CertificatePolicy $policy
+$Policy = New-AzKeyVaultCertificatePolicy -SubjectName $SubjectName -IssuerName Self -ValidityInMonths 12
+Add-AzKeyVaultCertificate -VaultName $VaultName -Name $CertName -CertificatePolicy $Policy
 ```
 
 ## Sample Application Overview
@@ -73,16 +63,11 @@ Add-AzKeyVaultCertificate -VaultName $VaultName -Name $CertName -CertificatePoli
 | MISampleWeb | ASP.NET Core App |User-Assigned | Go to the public endpoint `http://mycluster.myregion.cloudapp.azure.com:80/vault` |
 | MISampleConsole | Containerized C# Console App |System-Assigned | Remote into node running the service at `my.node.ip:3389`, find the running container with command `docker ps`, and look at the logs with `docker logs` |
 
-[Learn more about accessing Key Vault using service fabric and a managed identity](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-managed-identity-service-fabric-app-code#accessing-key-vault-from-a-service-fabric-application-using-managed-identity)
-
 ## Walkthrough
 
 ### Deploy a managed-identity-enabled cluster
 
 Deploying to Azure using the Azure Resource Manager is the recommended way of managing Azure resources. Provided is a sample cluster ARM template to create a Service Fabric cluster with managed identity enabled. The template uses the cluster certificate provided by your key vault, creates a system-assigned identity, and enables the Managed Identity token service so deployed applications can access their identities.
-
-- [More information about ARM deployments](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview)
-- [How to enable managed identity if you already have your own cluster template](https://docs.microsoft.com/en-us/azure/service-fabric/configure-new-azure-service-fabric-enable-managed-identity)
 
 To use the provided template:
 
@@ -90,8 +75,10 @@ To use the provided template:
     - `sourceVaultValue` can be found by navigating to your Key Vault in the Azure portal, choosing `Properties` from the sidebar, and copying the content under `Resource ID`
     - `certificateUrlValue` and `certificatethumbprint` can be found by navigating to your Key Vault, choosing `Certificates`, clicking into the cluster certificate and then the current version, and copying the content under `Secret Identifier` and `X.509 SHA-1 Thumbprint` respectively.
 2. In `ResourceManagement/cluster.parameters.json`, manually, or using `ctrl-f` and replace-all, change all instances of `mi-test` to a unique name, like `myusername-mi-test`. This will help ensure the deployment resource names do not conflict with the names of other public resources.
-3. Open `ResourceManagement/cluster.deploy.ps1` and complete `Subscription`, `ResourceGroupName`, and `ResourceGroupLocation`
-4. Start the deployment by running `.\cluster.deploy.ps1` from a Powershell window
+3. Start the deployment by running from a Powershell window: 
+```powershell
+ New-AzResourceGroupDeployment -TemplateParameterFile ".\cluster.parameters.json" -TemplateFile ".\cluster.template.json" -ResourceGroupName $ResourceGroupName
+```
 
 ### Deploy the sample application
 
@@ -108,20 +95,24 @@ To use the provided template:
 2. Build the console app by running `.\build.ps1` in `SFMISampleConsole` from an elevated powershell window.
 3. [Push the image to your private Azure Container Repository](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli)
 
-
 #### Deploy sample app
-
-- [How to enable system-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-system-assigned-managed-identity)
-- [How to enable user-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-user-assigned-managed-identity)
 
 1. Open `ResourceManagement/app.parameters.json` and complete `clusterName`, `applicationPackageURL`, and `userAssignedIdentityName`.
     - `aplicationPackageUrl` can be found by navigating into the blob container containing your application in your storage account, clicking into the application you would like to create, and copying the contents of `URL`.
 2. Start the deployment by running from a Powershell window: 
-```
-New-AzResourceGroupDeployment -ResourceGroupName <resourcegroup> -TemplateParameterFile ".\app.parameters.json" -TemplateFile ".\app.template.json" -verbose
+```powershell
+ New-AzResourceGroupDeployment -TemplateParameterFile ".\app.parameters.json" -TemplateFile ".\app.template.json" -ResourceGroupName $ResourceGroupName
 ```
 
 3. Before the application starts running, the console app will not have access to a key vault. The application's system assigned identity is created only after the application is deployed. Once the application is deployed, the system assigned identity can be given access permission to keyvault. The system assigned identity's name is {cluster}/{application name}/{servicename}
+
+## Next Steps
+
+- [Learn more about accessing Key Vault using service fabric and a managed identity](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-managed-identity-service-fabric-app-code#accessing-key-vault-from-a-service-fabric-application-using-managed-identity)
+- [How to enable managed identity if you already have your own cluster template](https://docs.microsoft.com/en-us/azure/service-fabric/configure-new-azure-service-fabric-enable-managed-identity)
+- [How to enable system-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-system-assigned-managed-identity)
+- [How to enable user-assigned identity on an existing application](https://docs.microsoft.com/en-us/azure/service-fabric/how-to-deploy-service-fabric-application-user-assigned-managed-identity)
+
 
 ## Contributing
 
