@@ -8,6 +8,12 @@
         "description": "Name of your cluster - Between 3 and 23 characters. Letters and numbers only"
       }
     },
+    "clusterLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Location of the cluster, e.g. westus2"
+      }
+    },
     "applicationTypeName": {
       "type": "string",
       "metadata": {
@@ -84,13 +90,13 @@
       "apiVersion": "[variables('managedIdentityApiVersion')]",
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "name": "[parameters('userAssignedIdentityName')]",
-      "location": "[resourceGroup().location]"
+      "location": "[parameters('clusterLocation')]"
     },
     {
       "apiVersion": "[variables('serviceFabricAppApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters/applicationTypes",
       "name": "[concat(parameters('clusterName'), '/', parameters('applicationTypeName'))]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('clusterLocation')]",
       "dependsOn": [],
       "properties": {}
     },
@@ -98,7 +104,7 @@
       "apiVersion": "[variables('serviceFabricAppApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters/applicationTypes/versions",
       "name": "[concat(parameters('clusterName'), '/', parameters('applicationTypeName'), '/', parameters('applicationTypeVersion'))]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('clusterLocation')]",
       "dependsOn": [
         "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applicationTypes/', parameters('applicationTypeName'))]"
       ],
@@ -110,7 +116,7 @@
       "apiVersion": "[variables('serviceFabricMIApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters/applications",
       "name": "[concat(parameters('clusterName'), '/', parameters('applicationName'))]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('clusterLocation')]",
       "dependsOn": [
         "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applicationTypes/', parameters('applicationTypeName'), '/versions/', parameters('applicationTypeVersion'))]",
         "[variables('userAssignedIdentityResourceId')]"
@@ -138,7 +144,7 @@
       "apiVersion": "[variables('serviceFabricMIApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters/applications/services",
       "name": "[concat(parameters('clusterName'), '/', parameters('applicationName'), '/', parameters('consoleServiceName'))]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('clusterLocation')]",
       "dependsOn": [
         "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applications/', parameters('applicationName'))]"
       ],
@@ -158,7 +164,7 @@
       "apiVersion": "[variables('serviceFabricMIApiVersion')]",
       "type": "Microsoft.ServiceFabric/clusters/applications/services",
       "name": "[concat(parameters('clusterName'), '/', parameters('applicationName'), '/', parameters('webServiceName'))]",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('clusterLocation')]",
       "dependsOn": [
         "[concat('Microsoft.ServiceFabric/clusters/', parameters('clusterName'), '/applications/', parameters('applicationName'))]"
       ],

@@ -5,6 +5,9 @@
         "clusterName": {
             "value": "mi-test"
         },
+        "clusterLocation": {
+            "value": ""
+        },
         "applicationTypeName": {
             "value": "MISampleAppType"
         },
