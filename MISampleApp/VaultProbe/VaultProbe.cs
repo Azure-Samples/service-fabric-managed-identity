@@ -5,10 +5,14 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Security.Cryptography;
     using System.Web;
     using Microsoft.Azure.KeyVault;
     using Microsoft.Azure.KeyVault.Models;
     using Newtonsoft.Json;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Net.Security;
+
 
     /// <summary>
     /// Sample class demonstrating access to KeyVault using Managed Identity.
@@ -26,7 +30,25 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
         public VaultProbe(ProbeConfig config)
         {
             this.config = config;
-            httpClient = new HttpClient();
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback += ServerCertificateValidation;
+            httpClient = new HttpClient(handler);
+        }
+        private bool ServerCertificateValidation(
+            HttpRequestMessage httpRequest,
+            X509Certificate2 cert,
+            System.Security.Cryptography.X509Certificates.X509Chain certChain,
+            SslPolicyErrors sslPolicyErrors)
+        {
+            if (cert == null || (sslPolicyErrors & SslPolicyErrors.RemoteCertificateNameMismatch) != SslPolicyErrors.RemoteCertificateNameMismatch)
+            {
+                Log(LogLevel.Info, "ServerCertificateValidation error");
+                return false;
+            }
+            return 0 == string.Compare(
+                cert.GetCertHashString(),
+                config.ManagedIdentityServerThumbprint,
+                StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

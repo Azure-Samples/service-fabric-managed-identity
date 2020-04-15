@@ -9,8 +9,10 @@
     {
         private static readonly string _vaultEnvVarName = "sfmi_observed_vault";
         private static readonly string _secretEnvVarName = "sfmi_observed_secret";
-        private static readonly string _miEndpointEnvVarName = "MSI_ENDPOINT";
-        private static readonly string _miAuthCodeEnvVarName = "MSI_SECRET";
+        private static readonly string _miEndpointEnvVarName = "IDENTITY_ENDPOINT";
+        private static readonly string _miAuthCodeEnvVarName = "IDENTITY_HEADER";
+        private static readonly string _miServerCertThumbprintEnvVarName = "IDENTITY_SERVER_THUMBPRINT";
+        private static readonly string _miApiVersionEnvVarName ="IDENTITY_API_VERSION";
         private static readonly string _miAuthCodeHeaderName = "secret";
         private static readonly string _verboseLoggingEnvVarName = "sfmi_verbose_logging";
         private static readonly string _pollIntervalInSecEnvVarName = "sfmi_poll_interval";
@@ -53,8 +55,12 @@
         /// <summary>
         /// SF Managed Identity API version
         /// </summary>
-        public string ManagedIdentityApiVersion { get { return "2019-07-01-preview"; } }
+        public string ManagedIdentityApiVersion { get; set; }
 
+          /// <summary>
+        /// SF Managed Identity Server Certificate Thumbprint
+        /// </summary>
+        public string ManagedIdentityServerThumbprint { get; set; }
         /// <summary>
         /// Build a probe config object from environment variables.
         /// </summary>
@@ -86,6 +92,18 @@
                 throw new ArgumentNullException("SecretName", "environment does not contain the expected variables (min: MI endpoint and authentication code");
             }
 
+            var serverThumbprint = Environment.GetEnvironmentVariable(_miServerCertThumbprintEnvVarName);
+            if (String.IsNullOrWhiteSpace(serverThumbprint))
+            {
+                throw new ArgumentNullException("ServerThumbprint", "environment does not contain the expected variable IDENTITY_SERVER_THUMBPRINT");
+            }
+
+            var latestApiVersion = Environment.GetEnvironmentVariable(_miApiVersionEnvVarName);
+            if (String.IsNullOrWhiteSpace(latestApiVersion))
+            {
+                throw new ArgumentNullException("APIVersion", "environment does not contain the expected variable IDENTITY_API_VERSION");
+            }
+
             var vaultName = Environment.GetEnvironmentVariable(_vaultEnvVarName);
             if (String.IsNullOrWhiteSpace(vaultName))
             {
@@ -97,6 +115,8 @@
                 ManagedIdentityAuthenticationCode = managedIdentityAuthenticationCode,
                 ManagedIdentityAuthenticationHeader = _miAuthCodeHeaderName,
                 ManagedIdentityEndpoint = managedIdentityEndpoint,
+                ManagedIdentityServerThumbprint = serverThumbprint,
+                ManagedIdentityApiVersion = latestApiVersion,
                 SecretName = secretName,
                 VaultName = vaultName,
                 DoVerboseLogging = doVerboseLogging,
