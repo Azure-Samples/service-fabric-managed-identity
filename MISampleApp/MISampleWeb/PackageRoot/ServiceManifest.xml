@@ -19,11 +19,10 @@
       </ExeHost>
     </EntryPoint>
     <EnvironmentVariables>
-      <!--                                      looks like:  https://mykv.vault.azure.net -->
       <EnvironmentVariable Name="sfmi_observed_vault" Value="" />
       <EnvironmentVariable Name="sfmi_observed_secret" Value="" />
-      <EnvironmentVariable Name="sfmi_verbose_logging" Value="false" />
-      <EnvironmentVariable Name="sfmi_poll_interval" Value="32" />
+      <EnvironmentVariable Name="sfmi_verbose_logging" Value="" />
+      <EnvironmentVariable Name="sfmi_poll_interval" Value="" />
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value=""/>
     </EnvironmentVariables>
   </CodePackage>
