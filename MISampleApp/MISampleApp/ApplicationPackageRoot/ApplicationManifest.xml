@@ -4,6 +4,11 @@
     <Parameter Name="MISampleConsole_InstanceCount" DefaultValue="1" />
     <Parameter Name="MISampleWeb_ASPNETCORE_ENVIRONMENT" DefaultValue="" />
     <Parameter Name="MISampleWeb_InstanceCount" DefaultValue="1" />
+    <!--                                 e.g. https://mykv.vault.azure.net -->
+    <Parameter Name="Vault_URI" DefaultValue="" />
+    <Parameter Name="Secret_Name" DefaultValue="" />
+    <Parameter Name="VERBOSE_LOGGING_ENABLED" DefaultValue="false" />
+    <Parameter Name="VAULT_POLL_INT_SECS" DefaultValue="60" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
@@ -11,19 +16,31 @@
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="MISampleConsolePkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
+    <EnvironmentOverrides CodePackageRef="Code">
+      <EnvironmentVariable Name="sfmi_observed_vault" Value="[Vault_URI]" />
+      <EnvironmentVariable Name="sfmi_observed_secret" Value="[Secret_Name]" />
+      <EnvironmentVariable Name="sfmi_verbose_logging" Value="[VERBOSE_LOGGING_ENABLED]" />
+      <EnvironmentVariable Name="sfmi_poll_interval" Value="[VAULT_POLL_INT_SECS]" />
+    </EnvironmentOverrides>
     <Policies>
+      <!-- Web Service is assigned a user-assigned managed identity -->
       <ContainerHostPolicies CodePackageRef="Code" Isolation="hyperv" RunInteractive="true">
         <!-- See https://aka.ms/I7z0p9 for how to encrypt your repository password -->
         <RepositoryCredentials AccountName="" Password="" PasswordEncrypted="false" />
       </ContainerHostPolicies>
+      <!-- Containerized Service is assigned a system-assigned managed identity -->
       <IdentityBindingPolicy ServiceIdentityRef="KVUser" ApplicationIdentityRef="SystemAssigned" />
     </Policies>
   </ServiceManifestImport>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="MISampleWebPkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
-    <EnvironmentOverrides CodePackageRef="code">
+    <EnvironmentOverrides CodePackageRef="Code">
       <EnvironmentVariable Name="ASPNETCORE_ENVIRONMENT" Value="[MISampleWeb_ASPNETCORE_ENVIRONMENT]" />
+      <EnvironmentVariable Name="sfmi_observed_vault" Value="[Vault_URI]" />
+      <EnvironmentVariable Name="sfmi_observed_secret" Value="[Secret_Name]" />
+      <EnvironmentVariable Name="sfmi_verbose_logging" Value="[VERBOSE_LOGGING_ENABLED]" />
+      <EnvironmentVariable Name="sfmi_poll_interval" Value="[VAULT_POLL_INT_SECS]" />
     </EnvironmentOverrides>
     <Policies>
       <IdentityBindingPolicy ServiceIdentityRef="KVUser" ApplicationIdentityRef="KeyVaultReader" />

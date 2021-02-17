@@ -56,13 +56,6 @@ $Policy = New-AzKeyVaultCertificatePolicy -SubjectName $SubjectName -IssuerName 
 Add-AzKeyVaultCertificate -VaultName $VaultName -Name $CertName -CertificatePolicy $Policy
 ```
 
-## Sample Application Overview
-
-| MISampleApp Service | Service type |Managed identity it uses | How to validate it is working |
-| :--- | :--- | :--- | :--- |
-| MISampleWeb | ASP.NET Core App |User-Assigned | Go to the public endpoint `http://mycluster.myregion.cloudapp.azure.com:80/vault` |
-| MISampleConsole | Containerized C# Console App |System-Assigned | Remote into node running the service at `my.node.ip:3389`, find the running container with command `docker ps`, and look at the logs with `docker logs` |
-
 ## Walkthrough
 
 ### Deploy a managed-identity-enabled cluster
@@ -71,9 +64,10 @@ Deploying to Azure using the Azure Resource Manager is the recommended way of ma
 
 To use the provided template:
 
-1. Open `ResourceManagement/cluster.parameters.json` and complete the fields `clusterLocation`, `adminUserName`, `adminPassword`, `sourceVaultValue`, `certificateUrlValue`, `certificateThumbprint`
-2. In `ResourceManagement/cluster.parameters.json`, manually, or using `ctrl-f` and replace-all, change all instances of `mi-test` to a unique name, like `myusername-mi-test`. This will help ensure the deployment resource names do not conflict with the names of other public resources.
-3. Start the deployment by running from a Powershell window: 
+1. Open [cluster.parameters.json](ResourceManagement/cluster.parameters.json) and complete the fields 
+    - `clusterLocation`, `adminUserName`, `adminPassword`, `sourceVaultValue`, `certificateUrlValue`, `certificateThumbprint`
+1. In [cluster.parameters.json](ResourceManagement/cluster.parameters.json), manually, or using `ctrl-f` and replace-all, change all instances of `mi-test` to a unique name, like `myusername-mi-test`. This will help ensure the deployment resource names do not conflict with the names of other public resources.
+1. Start the deployment by running from a Powershell window: 
 ```powershell
  New-AzResourceGroupDeployment -TemplateParameterFile ".\cluster.parameters.json" -TemplateFile ".\cluster.template.json" -ResourceGroupName $ResourceGroupName
 ```
@@ -82,27 +76,40 @@ To use the provided template:
 
 #### Application and Service Definition Changes
 
-1. In `MISampleApp/ApplicationPackageRoot/ApplicationManifest.xml`, complete `RepositoryCredentials` with the credentials for your container registry.
-2. In `MISampleApp/ApplicationPackageRoot/MISampleConsolePkg/ServiceManifest.xml`, complete `sfmi_observed_vault` and `sfmi_observed_Secret` under `EnvironmentVariables` with the information of the secret you would like the console app to access. Complete `ImageName` under `ContainerHost` with the container repository address the image will be hosted at.
-3. In `MISampleWb/PackageRoot/ServiceManifest.xml`, complete `sfmi_observed_vault` and `sfmi_observed_Secret` under `EnvironmentVariables` with the information of the secret the web app should access.
-4. In `SFMISampleConsole/build.ps1`, enter your desired image name.
+1. In [ApplicationManifest.xml](MISampleApp/ApplicationPackageRoot/ApplicationManifest.xml)
+    1. Complete `RepositoryCredentials` with the credentials for your container registry
+    2. Complete `Vault_URI` with the uri of your vault (e.g. https://mykv.vault.azure.net)
+    1. Complete `Secret_Name` with the name of your secret
+1. In [ServiceManifest.xml](MISampleApp/ApplicationPackageRoot/MISampleConsolePkg/ServiceManifest.xml), complete `ImageName` under `ContainerHost` with the container repository address the image will be hosted at.
+1. In [build.ps1](MISampleApp/SFMISampleConsole/build.ps1), enter your desired image name (e.g. same as address)
 
 #### Packaging and building your application
 
 1. [Package `MISampleApp` and upload it to your storage account.](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-package-apps)
-2. Build the console app by running `.\build.ps1` in `SFMISampleConsole` from an elevated powershell window.
-3. [Push the image to your private Azure Container Repository](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli)
+2. Build the console app by running [.\build.ps1](MISampleApp/SFMISampleConsole/build.ps1) from an elevated powershell window.
+    1. Please note docker should be running, and with Windows containers
+1. [Push the image to your private Azure Container Repository](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli), e.g.
+    1. docker login mycr.azurecr.io
+    1. docker push mycr.azurecr.io/folder/image
 
 #### Deploy sample app
 
-1. Open `ResourceManagement/app.parameters.json` and complete `clusterName`, `applicationPackageURL`, and `userAssignedIdentityName`.
+1. Open [app.parameters.json](ResourceManagement/app.parameters.json) and complete 
+    - `clusterName`, `applicationPackageURL`, and `userAssignedIdentityName`
     - `aplicationPackageUrl` can be found by navigating into the blob container containing your application in your storage account, clicking into the application you would like to create, and copying the contents of `URL`.
-2. Start the deployment by running from a Powershell window: 
+1. Start the deployment by running from a Powershell window: 
 ```powershell
  New-AzResourceGroupDeployment -TemplateParameterFile ".\app.parameters.json" -TemplateFile ".\app.template.json" -ResourceGroupName $ResourceGroupName
 ```
 
 3. Before the application starts running, the console app will not have access to a key vault. The application's system assigned identity is created only after the application is deployed. Once the application is deployed, the system assigned identity can be given access permission to keyvault. The system assigned identity's name is {cluster}/{application name}/{servicename}
+
+## Monitoring Secrets
+
+| MISampleApp Service | Service type |Managed identity it uses | How to validate it is working |
+| :--- | :--- | :--- | :--- |
+| MISampleWeb | ASP.NET Core App |User-Assigned | Go to the public endpoint `http://mycluster.myregion.cloudapp.azure.com:80/vault` |
+| MISampleConsole | Containerized C# Console App |System-Assigned | Remote into node running the service at `my.node.ip:3389`, find the running container with command `docker ps`, and look at the logs with `docker logs` |
 
 ## Next Steps
 
