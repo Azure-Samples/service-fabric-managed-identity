@@ -5,10 +5,7 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Security.Cryptography;
     using System.Web;
-    //using Microsoft.Azure.KeyVault;
-    //using Microsoft.Azure.KeyVault.Models;
     using Newtonsoft.Json;
     using System.Security.Cryptography.X509Certificates;
     using System.Net.Security;
@@ -178,8 +175,8 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
         /// <returns></returns>
         public async Task<string> ProbeSecretAsync(string vaultUri, string Name, string version)
         {
-            // initialize a KeyVault client with a managed identity-based authentication callback
-                var scClient = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential());
+            // initialize a SecretClient
+            var scClient = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential());
             Log(LogLevel.Info, $"\nRunning with configuration: \n\tobserved vault: {config.VaultName}\n\tobserved secret: {config.SecretName}\n\tMI endpoint: {config.ManagedIdentityEndpoint}\n\tMI auth code: {config.ManagedIdentityAuthenticationCode}\n\tMI auth header: {config.ManagedIdentityAuthenticationHeader}");
             string response = String.Empty;
 
@@ -187,12 +184,11 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
             Log(LogLevel.Info, $"\n== {DateTime.UtcNow.ToString()}: Probing secret...");
             try
             {
-                var secretResponse = await scClient.GetSecretAsync(Name, version)
-                    .ConfigureAwait(false);
+                var secretResponse = await scClient.GetSecretAsync(Name, version);
 
-                if (secretResponse.Value.Properties.RecoveryLevel != null)
+                if (secretResponse.GetRawResponse().Status==200)
                 {
-                    // use the secret: secretValue.Body.Value;
+                    // use the secret: secretValue.Value;
                     response = String.Format($"Successfully probed secret '{Name}' in vault '{vaultUri}': {PrintKeyVaultSecretMetadata(secretResponse.Value)}");
                 }
                 else
@@ -214,59 +210,6 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
 
             return response;
         }
-
-        /// <summary>
-        /// KV authentication callback, using the application's managed identity.
-        /// </summary>
-        /// <param name="authority"></param>
-        /// <param name="resource"></param>
-        /// <param name="scope"></param>
-        /// <returns>Access token</returns>
-        public async Task<string> AuthenticationCallbackAsync(string authority, string resource, string scope)
-        {
-            Log(LogLevel.Verbose, $"authentication callback invoked with: auth: '{authority}', resource: '{resource}', scope: '{scope}'");
-
-            var encodedResource = HttpUtility.UrlEncode(resource);
-
-            // first check the cache; use the resource as the caching key
-            ManagedIdentityTokenResponse tokenResponse;
-            if (responseCache.TryGetCachedItem(encodedResource, out tokenResponse))
-            {
-                Log(LogLevel.Verbose, $"cache hit for key '{encodedResource}'");
-
-                return tokenResponse.AccessToken;
-            }
-
-            Log(LogLevel.Verbose, $"cache miss for key '{encodedResource}'");
-
-            var requestUri = $"{config.ManagedIdentityEndpoint}?api-version={config.ManagedIdentityApiVersion}&resource={encodedResource}";
-            Log(LogLevel.Verbose, $"request uri: {requestUri}");
-
-            var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri);
-            requestMessage.Headers.Add(config.ManagedIdentityAuthenticationHeader, config.ManagedIdentityAuthenticationCode);
-            Log(LogLevel.Verbose, $"added header '{config.ManagedIdentityAuthenticationHeader}': '{config.ManagedIdentityAuthenticationCode}'");
-
-            var response = await httpClient.SendAsync(requestMessage)
-                .ConfigureAwait(false);
-            Log(LogLevel.Verbose, $"response status: success: {response.IsSuccessStatusCode}, status: {response.StatusCode}");
-
-            response.EnsureSuccessStatusCode();
-
-            var tokenResponseString = await response.Content.ReadAsStringAsync()
-                .ConfigureAwait(false);
-
-            tokenResponse = JsonConvert.DeserializeObject<ManagedIdentityTokenResponse>(tokenResponseString);
-            Log(LogLevel.Verbose, "deserialized token response; caching/returning access code..");
-
-            // the response "expires_on" field is in number of seconds from Unix time; cache only if the token is valid for at least another 5s
-            // The endpoint should not return an expired token, so pass it on even if it won't get cached.
-            var expiration = DateTimeOffset.FromUnixTimeSeconds(Int32.Parse(tokenResponse.ExpiresOn));
-            if (expiration > DateTimeOffset.UtcNow.AddSeconds(5.0))
-                responseCache.AddOrUpdate(encodedResource, tokenResponse, expiration);
-
-            return tokenResponse.AccessToken;
-        }
-
 
         private string PrintKeyVaultSecretMetadata(KeyVaultSecret secret)
         {
