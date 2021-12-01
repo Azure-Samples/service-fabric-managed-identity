@@ -7,8 +7,8 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
     using System.Threading.Tasks;
     using System.Security.Cryptography;
     using System.Web;
-    using Microsoft.Azure.KeyVault;
-    using Microsoft.Azure.KeyVault.Models;
+    //using Microsoft.Azure.KeyVault;
+    //using Microsoft.Azure.KeyVault.Models;
     using Newtonsoft.Json;
     using System.Security.Cryptography.X509Certificates;
     using System.Net.Security;
@@ -179,8 +179,7 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
         public async Task<string> ProbeSecretAsync(string vaultUri, string Name, string version)
         {
             // initialize a KeyVault client with a managed identity-based authentication callback
-            var kvClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback((a, r, s) => { return AuthenticationCallbackAsync(a, r, s); }));
-
+                var scClient = new SecretClient(new Uri(vaultUri), new DefaultAzureCredential());
             Log(LogLevel.Info, $"\nRunning with configuration: \n\tobserved vault: {config.VaultName}\n\tobserved secret: {config.SecretName}\n\tMI endpoint: {config.ManagedIdentityEndpoint}\n\tMI auth code: {config.ManagedIdentityAuthenticationCode}\n\tMI auth header: {config.ManagedIdentityAuthenticationHeader}");
             string response = String.Empty;
 
@@ -188,26 +187,22 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
             Log(LogLevel.Info, $"\n== {DateTime.UtcNow.ToString()}: Probing secret...");
             try
             {
-                var secretResponse = await kvClient.GetSecretWithHttpMessagesAsync(vaultUri, Name, version)
+                var secretResponse = await scClient.GetSecretAsync(Name, version)
                     .ConfigureAwait(false);
 
-                if (secretResponse.Response.IsSuccessStatusCode)
+                if (secretResponse.Value.Properties.RecoveryLevel != null)
                 {
                     // use the secret: secretValue.Body.Value;
-                    response = String.Format($"Successfully probed secret '{Name}' in vault '{vaultUri}': {PrintSecretBundleMetadata(secretResponse.Body)}");
+                    response = String.Format($"Successfully probed secret '{Name}' in vault '{vaultUri}': {PrintKeyVaultSecretMetadata(secretResponse.Value)}");
                 }
                 else
                 {
-                    response = String.Format($"Non-critical error encountered retrieving secret '{Name}' in vault '{vaultUri}': {secretResponse.Response.ReasonPhrase} ({secretResponse.Response.StatusCode})");
+                    response = String.Format($"Non-critical error encountered retrieving secret '{Name}' in vault '{vaultUri}': {secretResponse} ({secretResponse.GetRawResponse()})");
                 }
             }
             catch (Microsoft.Rest.ValidationException ve)
             {
                 response = String.Format($"encountered REST validation exception 0x{ve.HResult.ToString("X")} trying to access '{Name}' in vault '{vaultUri}' from {ve.Source}: {ve.Message}");
-            }
-            catch (KeyVaultErrorException kvee)
-            {
-                response = String.Format($"encountered KeyVault exception 0x{kvee.HResult.ToString("X")} trying to access '{Name}' in vault '{vaultUri}': {kvee.Response.ReasonPhrase} ({kvee.Response.StatusCode})");
             }
             catch (Exception ex)
             {
@@ -272,22 +267,6 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
             return tokenResponse.AccessToken;
         }
 
-        private string PrintSecretBundleMetadata(SecretBundle bundle)
-        {
-            StringBuilder strBuilder = new StringBuilder();
-
-            strBuilder.AppendFormat($"id: {bundle.Id}\n");
-            strBuilder.AppendFormat($"\tcontent type: {bundle.ContentType}\n");
-            strBuilder.AppendFormat($"\tmanaged: {bundle.Managed}\n");
-            strBuilder.AppendFormat($"\tenabled: {bundle.Attributes.Enabled}\n");
-            strBuilder.AppendFormat($"\tnbf: {bundle.Attributes.NotBefore}\n");
-            strBuilder.AppendFormat($"\texp: {bundle.Attributes.Expires}\n");
-            strBuilder.AppendFormat($"\tcreated: {bundle.Attributes.Created}\n");
-            strBuilder.AppendFormat($"\tupdated: {bundle.Attributes.Updated}\n");
-            strBuilder.AppendFormat($"\trecoveryLevel: {bundle.Attributes.RecoveryLevel}\n");
-
-            return strBuilder.ToString();
-        }
 
         private string PrintKeyVaultSecretMetadata(KeyVaultSecret secret)
         {
