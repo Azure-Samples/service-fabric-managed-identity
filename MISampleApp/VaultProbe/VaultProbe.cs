@@ -101,7 +101,7 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
         /// <returns></returns>
         public async Task<string> ProbeSecretAsync()
         {
-            
+
             // Demonstrates using Azure.Identity to abstract away tokens, and use the managed identity credential to speak to KeyVault
             string azIdFetchedSecret = await ProbeSecretWithManagedIdentityCredentialAsync(config.VaultName, config.SecretName);
 
@@ -154,7 +154,7 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
                     Log(LogLevel.Info, response);
                 }
 
-                
+
             }
             catch (Exception e)
             {
@@ -186,14 +186,14 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
             {
                 var secretResponse = await scClient.GetSecretAsync(Name, version);
 
-                if (secretResponse.GetRawResponse().Status==200)
+                if (secretResponse.GetRawResponse().Status == 200)
                 {
                     // use the secret: secretValue.Value;
-                    response = String.Format($"Successfully probed secret '{Name}' in vault '{vaultUri}': {PrintKeyVaultSecretMetadata(secretResponse.Value)}");
+                    response = String.Format($"Successfully probed secret '{Name}' in vault '{vaultUri}': {PrintKeyVaultSecretMetadata(secretResponse)}");
                 }
                 else
                 {
-                    response = String.Format($"Non-critical error encountered retrieving secret '{Name}' in vault '{vaultUri}': {secretResponse} ({secretResponse.GetRawResponse()})");
+                    response = String.Format($"Non-critical error encountered retrieving secret '{Name}' in vault '{vaultUri}': {secretResponse.GetRawResponse().ReasonPhrase} ({secretResponse.GetRawResponse().Status})");
                 }
             }
             catch (Microsoft.Rest.ValidationException ve)
