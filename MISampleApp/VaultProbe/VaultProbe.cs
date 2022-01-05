@@ -196,7 +196,7 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
                     response = String.Format($"Non-critical error encountered retrieving secret '{Name}' in vault '{vaultUri}': {secretResponse.GetRawResponse().ReasonPhrase} ({secretResponse.GetRawResponse().Status})");
                 }
             }
-            catch (Microsoft.Rest.ValidationException ve)
+            catch (RequestFailedException ve)
             {
                 response = String.Format($"encountered REST validation exception 0x{ve.HResult.ToString("X")} trying to access '{Name}' in vault '{vaultUri}' from {ve.Source}: {ve.Message}");
             }
