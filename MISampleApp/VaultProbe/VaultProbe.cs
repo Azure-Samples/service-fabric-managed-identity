@@ -148,10 +148,10 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
                 }
                 catch (RequestFailedException e)
                 {
-                    response = $"0x{e.HResult:X}: Status={e.Status} {e.Message} Encountered an exception fetching secret {secretName} from vault {vaultUri}";
+ response = $"0x{e.HResult:X}: Status={e.Status} {e.Message} Encountered an exception fetching secret {secretName} from vault {vaultUri}";
                     Log(LogLevel.Info, response);
                 }
-        
+
 
             }
             catch (Exception e)
