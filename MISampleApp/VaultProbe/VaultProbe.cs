@@ -152,7 +152,6 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
                     Log(LogLevel.Info, response);
                 }
 
-
             }
             catch (Exception e)
             {
