@@ -2,28 +2,28 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-      "clusterLocation": {
-        "value": "East US"
-      },
+        "clusterLocation": {
+            "value": ""
+        },
         "adminUserName": {
-            "value": "zz1",
+            "value": "",
             "description": "don't use common names like 'admin'"
         },
         "adminPassword": {
-            "value": "Zz123456",
+            "value": "",
             "description": "include lower, upper, number, special char"
         },
-      "sourceVaultValue": {
-        "value": "/subscriptions/faa080af-c1d8-40ad-9cce-e1a450ca5b57/resourceGroups/v-tong-MonthlyTrleaseTestPass/providers/Microsoft.KeyVault/vaults/kaiiikeyvault",
-        "description": "looks like /subscriptions/myguid/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv, can be found as ResourceID under properties in the key vault"
-      },
-      "certificateUrlValue": {
-        "value": "https://kaiiikeyvault.vault.azure.net/secrets/kaiicertificate/18b98dd37fbd468cad4b14740fe89703",
-        "description": "looks like https://mykv.vault.azure.net/secrets/mycert/guid, can be found as secret identifier in the certificate's page"
-      },
-      "certificateThumbprint": {
-        "value": "587B5F70A073040CF76253C71B10FEB11A591386s"
-      },
+        "sourceVaultValue": {
+            "value": "",
+            "description": "looks like /subscriptions/myguid/resourceGroups/myrg/providers/Microsoft.KeyVault/vaults/mykv, can be found as ResourceID under properties in the key vault"
+        },
+        "certificateUrlValue": {
+            "value": "",
+            "description": "looks like https://mykv.vault.azure.net/secrets/mycert/guid, can be found as secret identifier in the certificate's page"
+        },
+        "certificateThumbprint": {
+            "value": ""
+        },
         "nicName": {
             "value": "NIC-mi-test"
         },
