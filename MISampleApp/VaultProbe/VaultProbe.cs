@@ -104,7 +104,6 @@ namespace Azure.ServiceFabric.ManagedIdentity.Samples
             
             // Demonstrates using Azure.Identity to abstract away tokens, and use the managed identity credential to speak to KeyVault
             string azIdFetchedSecret = await ProbeSecretWithManagedIdentityCredentialAsync(config.VaultName, config.SecretName);
-            
             // Demonstrates using ManagedIdentityTokenService to fetch a token, cache, and present to KeyVault
             string mitsTokenFetchedSecret = await ProbeSecretAsync(config.VaultName, config.SecretName, String.Empty);
             return $"Token fetched secret:\n{mitsTokenFetchedSecret}\n\nManagedIdentityCredential fetched secret:\n{azIdFetchedSecret}";
